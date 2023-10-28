@@ -14,8 +14,12 @@ class BaseWords(abc.ABC):
     def words(self) -> Set[str]:
         raise NotImplementedError
 
+    @staticmethod
+    def clean_raw_words_file(raw_content: str) -> Set[str]:
+        return {word.strip() for word in raw_content.split("\n") if word.strip()}
 
-class URLZippedWords(abc.ABC):
+
+class URLZippedWords(BaseWords):
     def __init__(self, url: str):
         self.url = url
 
@@ -26,7 +30,7 @@ class URLZippedWords(abc.ABC):
         with tempfile.TemporaryDirectory() as tempdir:
             path = zipfile.ZipFile(io.BytesIO(raw)).extract(filename, path=tempdir)
             with open(path) as _fd:
-                return {word.strip() for word in _fd.read().split("\n") if word.strip()}
+                return self.clean_raw_words_file(_fd.read())
 
 
 class SpellingBee:
@@ -66,7 +70,6 @@ class SpellingBee:
 def main():
     puzzle = parse_input()
     words = URLZippedWords(WORDS_URL).words()
-    assert 'canonical' in words
     solution = puzzle.solve(words)
     pprint.pprint(sorted(list(solution)))
     print(f"\n{len(solution)} words\n")
